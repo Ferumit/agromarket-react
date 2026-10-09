@@ -1,110 +1,26 @@
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f5f7f2;
-  color: #1f2a1f;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  background: #2e7d32;
-  color: #fff;
-}
-
-.logo {
-  font-size: 22px;
-  font-weight: bold;
-}
-
-.nav a {
-  margin-left: 16px;
-  color: #fff;
-  text-decoration: none;
-}
-
-.cart {
-  padding: 6px 12px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.error {
-  width: 100%;
-  color: #c62828;
-}
-
-main {
-  padding: 24px;
-}
+/* Оформление из старой версии (agromarket/style.css).
+   Правила раскладки (.header, .catalog на flex, фиксированная ширина .card, .footer)
+   удалены в ЛР4 — их заменяет layout.css */
 
 h2 {
   color: #2e7d32;
 }
 
-/* Каталог: карточки в ряд с переносом */
-.catalog {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  padding: 24px;
+.cart {
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: #1b5e20; /* ЛР4, Lighthouse: полупрозрачный белый давал контраст 3.82 < 4.5 */
 }
 
-.catalog h2 {
-  width: 100%;
-  margin-bottom: 0;
-}
-
-/* Поле поиска — отдельной строкой над карточками */
-.catalog input {
-  flex-basis: 100%;
-  box-sizing: border-box;
-  padding: 8px 12px;
-  font-size: 16px;
-}
-
-.card {
-  width: 220px;
-  padding: 16px;
-  background: #fff;
-  border: 1px solid #dfe6dc;
-  border-radius: 10px;
-}
-
-.card img {
-  width: 100%;
-  border-radius: 6px;
-}
-
-.card h3 {
-  margin: 12px 0 4px;
+.error {
+  color: #c62828;
 }
 
 .card p {
-  margin: 0 0 12px;
   font-weight: bold;
   color: #2e7d32;
 }
 
-.card button {
-  width: 100%;
-  padding: 10px;
-  border: none;
-  border-radius: 6px;
-  background: #2e7d32;
-  color: #fff;
-  cursor: pointer;
-}
-
 .card button:hover {
   background: #1b5e20;
-}
-
-.footer {
-  padding: 16px 24px;
-  background: #1f2a1f;
-  color: #cfd8cc;
-  text-align: center;
 }
