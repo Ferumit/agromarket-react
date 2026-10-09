@@ -207,6 +207,11 @@ img {
   cursor: pointer;
 }
 
+.contact-form button:disabled {
+  background: #8bb38d;
+  cursor: default;
+}
+
 /* ===== Подвал ===== */
 .site-footer {
   display: flex;

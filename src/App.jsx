@@ -4,6 +4,8 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import ContactForm from './components/ContactForm';
 
+const API_URL = 'http://localhost:3000/api';
+
 function App() {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -15,7 +17,8 @@ function App() {
   useEffect(() => {
     async function loadProducts() {
       try {
-        const response = await fetch('http://localhost:3001/products');
+        // было: fetch('http://localhost:3001/products') — json-server
+        const response = await fetch(`${API_URL}/products`);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
@@ -63,7 +66,7 @@ function App() {
                 key={product.id}
                 product={product}
                 onAdd={handleAddToCart}
-                // json-server 1.x отдаёт id строкой, поэтому сравниваем через String
+                // id может прийти числом или строкой (json-server 1.x), поэтому через String
                 featured={String(product.id) === '1'}
               />
             ))}

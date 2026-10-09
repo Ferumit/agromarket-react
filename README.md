@@ -2,19 +2,23 @@
 
 Frontend «АгроМаркета» на React + Vite. Учебный проект по дисциплине «Fullstack-разработка».
 
-Связанные репозитории: [agromarket](https://github.com/Ferumit/agromarket) — статичная
-версия и `db.json` для json-server (лаб. 1–2).
+Связанные репозитории: [agromarket-server](https://github.com/Ferumit/agromarket-server) — backend
+на Express (с лаб. 5), [agromarket](https://github.com/Ferumit/agromarket) — статичная версия
+и `db.json` для json-server (лаб. 1–2).
 
 ## Запуск
 
 ```bash
-# окно 1 — данные: в папке agromarket (лаб. 1–2)
-npx json-server --watch db.json --port 3001
+# окно 1 — API: в папке agromarket-server (см. его README), http://localhost:3000
+npm run dev
 
 # окно 2 — этот проект, http://localhost:5173
 npm install
 npm run dev
 ```
+
+Лабораторные 3–4 работали с json-server: `npx json-server --watch db.json --port 3001` в папке agromarket.
+С лабораторной 5 он не нужен.
 
 ## Лабораторная 3 — компоненты, props, state, hooks
 
@@ -104,3 +108,14 @@ Accessibility: **93** → **100**. Единственное замечание �
 7. **label htmlFor и type="email".** Связка `<label htmlFor="email">` + `<input id="email">`: клик по подписи
    ставит курсор в поле, скринридер читает подпись. `type="email"` даёт встроенную проверку формата
    и клавиатуру с «@» на телефоне.
+
+## Лабораторная 5 — каталог и форма через Express API
+
+- `App.jsx`: константа `API_URL = 'http://localhost:3000/api'`, каталог грузится с `${API_URL}/products`
+  вместо json-server;
+- `ContactForm.jsx`: `handleSubmit` собирает поля через `FormData` и отправляет `POST /api/orders`
+  с заголовком `Content-Type: application/json`. Ответ 201 → alert «Заявка №… принята!» и очистка формы,
+  400 → alert с текстом ошибки от сервера, сервер выключен → «Сервер недоступен…»;
+- бонус: пока запрос идёт, кнопка заблокирована и показывает «Отправка…».
+
+Ответы на вопросы лабораторной 5 — в README репозитория agromarket-server.

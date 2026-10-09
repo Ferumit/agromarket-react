@@ -1,8 +1,38 @@
+import { useState } from 'react';
+
+const API_URL = 'http://localhost:3000/api';
+
 function ContactForm() {
-  function handleSubmit(e) {
+  // Бонус ЛР5: пока запрос идёт, кнопка заблокирована и показывает «Отправка…»
+  const [sending, setSending] = useState(false);
+
+  async function handleSubmit(e) {
     e.preventDefault(); // не перезагружать страницу
-    alert('Заявка отправлена! Мы свяжемся с вами.');
-    e.target.reset(); // очистить поля
+    const form = e.target;
+
+    // Собираем все поля формы в объект { name: ..., email: ..., ... }
+    const data = Object.fromEntries(new FormData(form));
+
+    setSending(true);
+    try {
+      const res = await fetch(`${API_URL}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+
+      if (!res.ok) { // статус не 2xx (например, 400)
+        alert('Ошибка: ' + result.error);
+        return;
+      }
+      alert(`Заявка №${result.id} принята!`);
+      form.reset();
+    } catch { // сервер выключен или недоступен
+      alert('Сервер недоступен. Запущен ли agromarket-server?');
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -28,7 +58,9 @@ function ContactForm() {
         <label htmlFor="comment">Комментарий</label>
         <textarea id="comment" name="comment" rows="4" />
 
-        <button type="submit">Отправить заявку</button>
+        <button type="submit" disabled={sending}>
+          {sending ? 'Отправка…' : 'Отправить заявку'}
+        </button>
       </form>
     </section>
   );
