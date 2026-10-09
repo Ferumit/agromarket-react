@@ -1,6 +1,5 @@
 import { useState } from 'react';
-
-const API_URL = 'http://localhost:3000/api';
+import { apiFetch } from '../api.js';
 
 function ContactForm({ products = [] }) {
   // Бонус ЛР5: пока запрос идёт, кнопка заблокирована и показывает «Отправка…»
@@ -15,21 +14,18 @@ function ContactForm({ products = [] }) {
 
     setSending(true);
     try {
-      const res = await fetch(`${API_URL}/orders`, {
+      // apiFetch приложит токен, если клиент вошёл: заявка привяжется к его аккаунту
+      const result = await apiFetch('/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      const result = await res.json();
-
-      if (!res.ok) { // статус не 2xx (например, 400)
-        alert('Ошибка: ' + result.error);
-        return;
-      }
       alert(`Заявка №${result.id} принята!`);
       form.reset();
-    } catch { // сервер выключен или недоступен
-      alert('Сервер недоступен. Запущен ли agromarket-server?');
+    } catch (err) {
+      // TypeError — fetch не достучался до сервера; иначе это ошибка API (например, 400)
+      alert(err instanceof TypeError
+        ? 'Сервер недоступен. Запущен ли agromarket-server?'
+        : 'Ошибка: ' + err.message);
     } finally {
       setSending(false);
     }

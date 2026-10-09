@@ -142,7 +142,7 @@ img {
    Бонус: макет описан именованными областями grid-template-areas */
 .page {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr); /* не 1fr: колонка не растёт из-за широкой таблицы заявок */
   grid-template-areas:
     "catalog"
     "sidebar"
@@ -157,8 +157,15 @@ img {
   grid-area: catalog;
 }
 
-.sidebar {
+/* ЛР7: в правой колонке два блока — «Кабинет» и «Доставка» */
+.sidebar-column {
   grid-area: sidebar;
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.sidebar {
   background: #fff;
   border: 1px solid #dfe6dc;
   border-radius: 10px;
@@ -213,6 +220,115 @@ img {
   cursor: default;
 }
 
+/* ===== ЛР7: вход, форма товара, панель заявок ===== */
+.auth-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.login-form,
+.admin-form {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.login-form h3,
+.admin-form h3 {
+  margin: 0;
+}
+
+.login-form input,
+.admin-form input {
+  padding: 8px 12px;
+  border: 1px solid #b9c4b5;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.auth-bar button,
+.admin-form button,
+.orders-panel button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #2e7d32;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.auth-bar .link-button {
+  padding: 0;
+  background: none;
+  color: #2e7d32;
+  text-decoration: underline;
+}
+
+.admin-form {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #fffde7;
+  border: 1px dashed #c0a400;
+  border-radius: 10px;
+}
+
+/* Форма товара на десктопе — в одну строку */
+@media (min-width: 768px) {
+  .admin-form {
+    /* minmax(0, …): поля могут сжиматься, иначе их минимальная ширина распирает сетку страницы */
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .admin-form input {
+    min-width: 0;
+  }
+
+  .admin-form h3,
+  .admin-form .error {
+    grid-column: 1 / -1;
+  }
+}
+
+.card .card-delete {
+  margin-top: 0;
+  background: #fff;
+  color: #c62828;
+  border: 1px solid #c62828;
+}
+
+.card .card-delete:hover {
+  background: #ffebee;
+}
+
+.orders-panel {
+  grid-column: 1 / -1; /* на всю ширину, отдельной строкой под формой */
+  background: #fff;
+  border: 1px solid #dfe6dc;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.table-wrap {
+  overflow-x: auto; /* на телефоне таблица прокручивается, а не ломает страницу */
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 8px;
+  border-bottom: 1px solid #dfe6dc;
+  text-align: left;
+}
+
 /* ===== Подвал ===== */
 .site-footer {
   display: flex;
@@ -255,16 +371,17 @@ img {
 /* ===== Десктоп: от 1024px — каталог слева (3 доли), доставка справа (1 доля) ===== */
 @media (min-width: 1024px) {
   .page {
-    grid-template-columns: 3fr 1fr;
+    /* minmax(0, …) — колонка не растёт из-за широкого содержимого */
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
     grid-template-areas:
       "catalog sidebar"
       "contact contact";
     padding: 24px;
   }
 
-  .sidebar {
+  .sidebar-column {
     align-self: start; /* не растягиваться на всю высоту каталога */
-    position: sticky; /* бонус: «Доставка» остаётся на экране при прокрутке */
+    position: sticky; /* бонус ЛР4: правая колонка остаётся на экране при прокрутке */
     top: 80px; /* ниже липкой шапки */
   }
 }

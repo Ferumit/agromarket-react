@@ -7,6 +7,7 @@ function Header({ cartCount = 0 }) {
           <li><a href="#catalog">Каталог</a></li>
           <li><a href="#delivery">Доставка</a></li>
           <li><a href="#contact">Контакты</a></li>
+          <li><a href="#account">Кабинет</a></li>
         </ul>
       </nav>
       <div className="cart">🛒 Корзина: {cartCount}</div>
