@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 const API_URL = 'http://localhost:3000/api';
 
-function ContactForm() {
+function ContactForm({ products = [] }) {
   // Бонус ЛР5: пока запрос идёт, кнопка заблокирована и показывает «Отправка…»
   const [sending, setSending] = useState(false);
 
@@ -45,6 +45,15 @@ function ContactForm() {
         <label htmlFor="email">Email</label>
         <input id="email" name="email" type="email" required
           placeholder="farmer@mail.kz" />
+
+        {/* Бонус ЛР6: выбор товара — сервер сохранит product_id и покажет product_name в заявках */}
+        <label htmlFor="product_id">Товар</label>
+        <select id="product_id" name="product_id" defaultValue="">
+          <option value="">— не выбран —</option>
+          {products.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
 
         <label htmlFor="phone">Телефон</label>
         <input id="phone" name="phone" type="tel" placeholder="+7 7XX XXX XX XX" />

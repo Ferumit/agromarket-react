@@ -82,7 +82,7 @@ function App() {
           </ul>
         </aside>
 
-        <ContactForm />
+        <ContactForm products={products} />
       </main>
       <Footer />
     </>
