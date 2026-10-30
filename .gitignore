@@ -25,3 +25,5 @@ dist-ssr
 
 # Тесты
 coverage/
+test-results/
+playwright-report/
