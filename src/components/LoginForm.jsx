@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { apiFetch } from '../api.js';
 
-export default function LoginForm({ onLogin }) {
+export default function LoginForm({ onLogin, notice }) {
+  const titleId = useId();
   const [mode, setMode] = useState('login'); // 'login' или 'register'
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,8 +29,11 @@ export default function LoginForm({ onLogin }) {
   const isLogin = mode === 'login';
 
   return (
-    <form className="login-form" onSubmit={handleSubmit}>
-      <h3>{isLogin ? 'Вход' : 'Регистрация'}</h3>
+    // Имя формы — её заголовок: на странице два поля «Email» (вход и заявка),
+    // и по имени формы и тест, и экранный диктор понимают, какое из них какое
+    <form className="login-form" aria-labelledby={titleId} onSubmit={handleSubmit}>
+      <h3 id={titleId}>{isLogin ? 'Вход' : 'Регистрация'}</h3>
+      {notice && <p className="error" role="status">{notice}</p>}
       {!isLogin && <input name="name" placeholder="Имя" aria-label="Имя" required />}
       <input name="email" type="email" placeholder="Email" aria-label="Email" required />
       <input name="password" type="password" placeholder="Пароль (от 8 символов)"

@@ -33,8 +33,8 @@ function ContactForm({ products = [] }) {
 
   return (
     <section id="contact" className="contact">
-      <h2>Оптовая заявка</h2>
-      <form className="contact-form" onSubmit={handleSubmit}>
+      <h2 id="contact-title">Оптовая заявка</h2>
+      <form className="contact-form" aria-labelledby="contact-title" onSubmit={handleSubmit}>
         <label htmlFor="name">Имя / организация</label>
         <input id="name" name="name" type="text" required />
 
