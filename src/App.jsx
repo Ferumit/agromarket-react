@@ -6,7 +6,7 @@ import ContactForm from './components/ContactForm';
 import LoginForm from './components/LoginForm.jsx';
 import AddProductForm from './components/AddProductForm.jsx';
 import AdminOrders from './components/AdminOrders.jsx';
-import { API_URL, apiFetch } from './api.js';
+import { API_URL, SESSION_EXPIRED, apiFetch } from './api.js';
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -18,6 +18,7 @@ function App() {
   const [user, setUser] = useState(
     () => JSON.parse(localStorage.getItem('user') || 'null')
   );
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   // [] — выполнить один раз, при первом появлении компонента
   useEffect(() => {
@@ -39,10 +40,20 @@ function App() {
     loadProducts();
   }, []);
 
+  // apiFetch получил 401 на запрос с токеном — выходим из аккаунта
+  useEffect(() => {
+    function handleSessionExpired() {
+      setUser(null);
+      setSessionExpired(true);
+    }
+    window.addEventListener(SESSION_EXPIRED, handleSessionExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED, handleSessionExpired);
+  }, []);
+
   // В localStorage может лежать истёкший токен — спрашиваем сервер, кто мы
   useEffect(() => {
     if (!localStorage.getItem('token')) return; // не входили — проверять нечего
-    // при 401 apiFetch сам выполнит выход, поэтому ошибку просто глушим
+    // при 401 apiFetch сам сообщит о выходе (SESSION_EXPIRED), поэтому ошибку просто глушим
     apiFetch('/auth/me').then(setUser).catch(() => {});
   }, []);
 
@@ -50,6 +61,7 @@ function App() {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
     setUser(user);
+    setSessionExpired(false);
   }
 
   function handleLogout() {
@@ -102,6 +114,10 @@ function App() {
 
           {loading && <p>Загрузка...</p>}
           {error && <p className="error">{error}</p>}
+          {!loading && !error && products.length === 0 && <p>Товаров пока нет</p>}
+          {!loading && !error && products.length > 0 && filteredProducts.length === 0 && (
+            <p>По запросу «{searchTerm}» ничего не найдено</p>
+          )}
           <div className="product-grid">
             {!loading && !error && filteredProducts.map((product) => (
               <ProductCard
@@ -124,7 +140,10 @@ function App() {
                 <button onClick={handleLogout}>Выйти</button>
               </>
             ) : (
-              <LoginForm onLogin={handleLogin} />
+              <LoginForm
+                onLogin={handleLogin}
+                notice={sessionExpired ? 'Сессия истекла — войдите заново' : ''}
+              />
             )}
           </section>
 
