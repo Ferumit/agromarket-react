@@ -17,7 +17,7 @@ describe('ProductCard', () => {
     render(<ProductCard product={product} onAdd={vi.fn()} />);
 
     expect(screen.getByRole('heading', { name: 'Мёд натуральный' })).toBeInTheDocument();
-    expect(screen.getByText('4500 тг / кг')).toBeInTheDocument();
+    expect(screen.getByText('4 500 ₸ / кг')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Мёд натуральный' })).toHaveAttribute('src', product.image);
   });
 
