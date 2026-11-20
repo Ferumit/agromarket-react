@@ -1,14 +1,24 @@
-name: E2E (production)
+name: Smoke (production)
 
-# E2E против продакшена на каждый PR бессмыслен: в продакшене ещё старая версия.
-# Поэтому — по расписанию и по кнопке Run workflow
+# На продакшен идут только тесты @smoke: они ничего не создают в базе (ЛР12).
+# Полные E2E (регистрация, товары, заявки) — только локально: npm run e2e.
+# Когда запускается:
+#  - после каждого успешного деплоя Vercel в Production (событие deployment_status);
+#  - ежедневно в 04:00 UTC (09:00 в Астане) — заметить, что «уснула» база или API;
+#  - кнопкой Run workflow
 on:
+  deployment_status:
   workflow_dispatch:
   schedule:
-    - cron: '0 4 * * *'        # ежедневно 04:00 UTC (09:00 в Астане)
+    - cron: '0 4 * * *'
 
 jobs:
-  e2e:
+  smoke:
+    # Preview-деплои закрыты входом Vercel и не входят в CORS API — их не проверяем
+    if: >-
+      github.event_name != 'deployment_status' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,9 +28,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test
+      - run: npm run e2e:smoke
         env:
-          E2E_BASE_URL: ${{ vars.PRODUCTION_URL }}
+          BASE_URL: ${{ vars.PRODUCTION_URL }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
