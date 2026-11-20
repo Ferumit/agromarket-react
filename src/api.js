@@ -5,6 +5,22 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/ap
 // Событие window: сервер ответил 401 на запрос с токеном
 export const SESSION_EXPIRED = 'agromarket:session-expired';
 
+// Ошибка ответа API. details — ошибки валидации по полям (ЛР11):
+// 400 { error: 'Ошибка валидации', details: [{ field: 'price', message: 'Цена должна быть больше 0' }] }
+export class ApiError extends Error {
+  constructor(data, status) {
+    const details = Array.isArray(data?.details) ? data.details : [];
+    // Если есть details, текст ошибки собираем из них: «Ошибка валидации» сама по себе
+    // ничего не говорит (так её покажет, например, alert формы заявки)
+    super(details.length
+      ? details.map((d) => d.message).join('. ')
+      : data?.error || `Ошибка ${status}`);
+    this.name = 'ApiError';
+    this.status = status;
+    this.details = details;
+  }
+}
+
 // Обёртка над fetch: добавляет токен, разбирает JSON и превращает ошибки API в исключения
 export async function apiFetch(path, options = {}) {
   const token = localStorage.getItem('token');
@@ -26,7 +42,7 @@ export async function apiFetch(path, options = {}) {
   }
 
   if (!res.ok) {
-    throw new Error(data?.error || `Ошибка ${res.status}`);
+    throw new ApiError(data, res.status);
   }
   return data;
 }

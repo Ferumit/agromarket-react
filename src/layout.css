@@ -249,6 +249,23 @@ img {
   font: inherit;
 }
 
+/* Поле с подсказкой сервера (ЛР11) */
+.admin-form .field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.login-form [aria-invalid='true'],
+.admin-form [aria-invalid='true'] {
+  border-color: #c62828;
+}
+
+.field-error {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
 .auth-bar button,
 .admin-form button,
 .orders-panel button {
@@ -281,7 +298,7 @@ img {
   .admin-form {
     /* minmax(0, …): поля могут сжиматься, иначе их минимальная ширина распирает сетку страницы */
     grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) auto;
-    align-items: center;
+    align-items: start;
   }
 
   .admin-form input {
