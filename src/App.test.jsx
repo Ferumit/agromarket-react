@@ -1,18 +1,14 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
 import App from './App';
-import { mockApi, mockFetch, requestOf } from './test/fetch.js';
+import { server, recordRequests } from './test/server.js';
+import { farmer, PASSWORD, TOKEN } from './test/handlers.js';
 
-// Каталог живёт в App: он грузит товары в useEffect и показывает загрузку, данные или ошибку
-const products = [
-  { id: 1, name: 'Картофель', category: 'Овощи', price: 350, unit: 'кг', image: null },
-  { id: 2, name: 'Мёд натуральный', category: 'Мёд', price: 4500, unit: 'кг', image: null },
-  { id: 3, name: 'Молоко фермерское', category: 'Молочная продукция', price: 600, unit: 'л', image: null },
-];
-
+// Каталог живёт в App: он грузит товары в useEffect и показывает загрузку, данные или ошибку.
+// API подменяет MSW (src/test/handlers.js): по умолчанию — три товара
 describe('Каталог (App)', () => {
   test('сначала показывает загрузку, потом товары', async () => {
-    mockFetch(products);
     render(<App />);
 
     expect(screen.getByText(/загрузка/i)).toBeInTheDocument();
@@ -24,32 +20,32 @@ describe('Каталог (App)', () => {
   });
 
   test('запрашивает правильный адрес, один раз', async () => {
-    const spy = mockFetch(products);
+    const requests = recordRequests();
     render(<App />);
     await screen.findByRole('heading', { name: 'Картофель' });
 
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(requestOf(spy).url).toMatch(/\/api\/products$/);
+    expect(requests.map((r) => `${r.method} ${r.path}`)).toEqual(['GET /api/products']);
   });
 
-  test('при ошибке сервера показывает сообщение', async () => {
-    mockFetch({ error: 'Внутренняя ошибка сервера' }, 500);
+  test('сервер упал (500) — сообщение об ошибке с role="alert", а не белый экран', async () => {
+    server.use(http.get('*/api/products', () =>
+      HttpResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 })));
     render(<App />);
 
-    expect(await screen.findByText('Не удалось загрузить товары')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось загрузить товары');
     expect(screen.queryByText(/загрузка/i)).not.toBeInTheDocument();
     expect(screen.queryAllByRole('article')).toHaveLength(0);
   });
 
   test('сеть недоступна — тоже сообщение, а не пустая страница', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
+    server.use(http.get('*/api/products', () => HttpResponse.error())); // fetch бросит TypeError
     render(<App />);
 
-    expect(await screen.findByText('Не удалось загрузить товары')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось загрузить товары');
   });
 
   test('сервер вернул [] — «Товаров пока нет»', async () => {
-    mockFetch([]);
+    server.use(http.get('*/api/products', () => HttpResponse.json([])));
     render(<App />);
 
     expect(await screen.findByText('Товаров пока нет')).toBeInTheDocument();
@@ -57,7 +53,6 @@ describe('Каталог (App)', () => {
 
   test('поиск оставляет подходящие товары, а если их нет — так и пишет', async () => {
     const ui = userEvent.setup();
-    mockFetch(products);
     render(<App />);
     await screen.findByRole('heading', { name: 'Картофель' });
 
@@ -76,11 +71,8 @@ describe('Каталог (App)', () => {
 describe('Вход (App)', () => {
   test('токен истёк: сервер ответил 401 — показывается форма входа и «войдите заново»', async () => {
     localStorage.setItem('token', 'expired-token');
-    localStorage.setItem('user', JSON.stringify({ id: 7, name: 'Фермер', role: 'user' }));
-    const spy = mockApi({
-      '/auth/me': [401, { error: 'Срок действия токена истёк, войдите снова' }],
-      '/products': [200, products],
-    });
+    localStorage.setItem('user', JSON.stringify(farmer));
+    const requests = recordRequests();
     render(<App />);
 
     // Пока сервер не ответил, App верит localStorage
@@ -91,27 +83,22 @@ describe('Вход (App)', () => {
     expect(screen.queryByText(/вы вошли как/i)).not.toBeInTheDocument();
     expect(localStorage.getItem('token')).toBeNull();
 
-    const me = spy.mock.calls.findIndex(([url]) => String(url).endsWith('/auth/me'));
-    expect(requestOf(spy, me).headers.get('Authorization')).toBe('Bearer expired-token');
+    const me = requests.find((r) => r.path === '/api/auth/me');
+    expect(me.headers.get('Authorization')).toBe('Bearer expired-token');
   });
 
-  test('после входа — «Вы вошли как …», токен сохранён; «Выйти» возвращает форму', async () => {
+  test('успешный вход сохраняет токен, «Выйти» возвращает форму', async () => {
     const ui = userEvent.setup();
-    const farmer = { id: 7, name: 'Фермер', email: 'farmer@agromarket.kz', role: 'user' };
-    mockApi({
-      '/auth/login': [200, { user: farmer, token: 'jwt-token' }],
-      '/products': [200, products],
-    });
     render(<App />);
 
     // «Email» на странице два (вход и заявка) — ищем внутри формы «Вход»
     const loginForm = screen.getByRole('form', { name: 'Вход' });
     await ui.type(within(loginForm).getByLabelText('Email'), farmer.email);
-    await ui.type(within(loginForm).getByLabelText('Пароль'), 'secret123');
+    await ui.type(within(loginForm).getByLabelText('Пароль'), PASSWORD);
     await ui.click(within(loginForm).getByRole('button', { name: 'Войти' }));
 
     expect(await screen.findByText(/вы вошли как/i)).toHaveTextContent('Вы вошли как Фермер (user)');
-    expect(localStorage.getItem('token')).toBe('jwt-token');
+    expect(localStorage.getItem('token')).toBe(TOKEN);
     // покупателю админ-панель не показывается
     expect(screen.queryByRole('heading', { name: 'Новый товар' })).not.toBeInTheDocument();
 

@@ -1,6 +1,6 @@
 function ProductCard({ product, onAdd, featured, onDelete }) {
   return (
-    <article className={featured ? 'card card--featured' : 'card'}>
+    <article className={featured ? 'card card--featured' : 'card'} data-testid="product-card">
       {featured && <span className="badge">Товар недели</span>}
       {/* у товара, добавленного через форму, картинки может не быть */}
       <img src={product.image || 'https://placehold.co/300x200?text=No+photo'} alt={product.name} />
