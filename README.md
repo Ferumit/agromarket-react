@@ -43,7 +43,8 @@ npx playwright show-report        # HTML-отчёт последнего про�
 - **CI** (`.github/workflows/ci.yml`) в каждом PR и push в main: `npm ci` → lint → `npm run test:run` → build.
   Ветка `main` защищена: проверка `build` обязательна, в том числе для администратора.
 - **Smoke продакшена** (`.github/workflows/e2e.yml`):
-  - после каждого успешного деплоя Vercel в Production (событие `deployment_status`);
+  - после каждого успешного деплоя Vercel из `main` — по событию `status`: о деплое Vercel сообщает статусом
+    коммита «Vercel», а не через GitHub Deployments;
   - ежедневно в 04:00 UTC (09:00 в Астане);
   - кнопкой Run workflow.
 
@@ -57,7 +58,7 @@ npx playwright show-report        # HTML-отчёт последнего про�
 | Сервер: Supertest (ЛР8, ЛР11) | маршруты + PostgreSQL: права, вход, CRUD, валидация zod | 46 | 6,7 с (`npm test` в agromarket-server) |
 | Клиент: компонентные (Vitest + RTL + MSW) | `ProductCard`, `LoginForm`, `AddProductForm`, `ContactForm`, `App`: загрузка, пусто, 500, сеть, 401, 429, 400 с `details` | 32 | 7,5 с |
 | E2E: Playwright (локально) | Chromium → React → Express → PostgreSQL: регистрация, вход, товар администратора, цена -500, заявка | 11 | 9,9 с |
-| Smoke: Playwright (продакшен) | 4 теста `@smoke`: каталог, поиск, прямая ссылка, гость без админ-панели | 4 | _после деплоя_ |
+| Smoke: Playwright (продакшен) | 4 теста `@smoke`: каталог, поиск, прямая ссылка, гость без админ-панели | 4 | 9,2 с с ноутбука, 3,8 с в Actions |
 
 ## Лабораторная 3 — компоненты, props, state, hooks
 
@@ -382,6 +383,13 @@ Accessibility: **93** → **100**. Единственное замечание �
      что исправить. `ApiError` собирает текст из `details`, тест заявки проверяет «Ошибка: Некорректный e-mail».
   3. **Полные E2E на продакшене.** В ЛР10 E2E по расписанию каждый день регистрировали покупателя и создавали
      заявку в настоящей базе. Теперь на продакшен идут только `@smoke`.
+  4. **Smoke после деплоя не запускался.** Сначала workflow ждал событие `deployment_status`, как в бонусе
+     лабораторной. После слияния #9 Vercel выложил сайт, а smoke не запустился. Проверка через API GitHub
+     показала: у репозитория нет ни одного GitHub Deployment, а Vercel сообщает о деплое статусом коммита
+     «Vercel» (`pending` → `success`). В [#12](https://github.com/Ferumit/agromarket-react/pull/12) workflow
+     переведён на событие `status` с условием `context == 'Vercel'`, `state == 'success'`, ветка `main`.
+     После слияния smoke [запустился сам](https://github.com/Ferumit/agromarket-react/actions/runs/44668275410):
+     4 из 4 за 3,8 с.
 
   Поля форм нашлись по подписям сразу: `htmlFor` и `aria-label` есть с ЛР4 и ЛР7, имена формам добавили в ЛР10.
   Проверка из части 2 — убрал цену из `ProductCard`: тест упал с `Unable to find an element with the text:
@@ -434,12 +442,16 @@ Accessibility: **93** → **100**. Единственное замечание �
 - PR:
   - [#8 ошибки из details](https://github.com/Ferumit/agromarket-react/pull/8) (ЛР11);
   - [#9 test/frontend](https://github.com/Ferumit/agromarket-react/pull/9);
-  - docs/lab12 — этот README;
+  - [#12 smoke по статусу Vercel](https://github.com/Ferumit/agromarket-react/pull/12);
+  - [#11 docs/lab12](https://github.com/Ferumit/agromarket-react/pull/11) — этот README;
   - [#10 — красный тест, Merge заблокирован](https://github.com/Ferumit/agromarket-react/pull/10): закрыт без
     слияния, `mergeStateStatus: BLOCKED`.
 - Actions:
   - [CI](https://github.com/Ferumit/agromarket-react/actions/workflows/ci.yml) (lint → test:run → build);
-  - [Smoke (production)](https://github.com/Ferumit/agromarket-react/actions/workflows/e2e.yml).
+  - [Smoke (production)](https://github.com/Ferumit/agromarket-react/actions/workflows/e2e.yml) —
+    [автоматический запуск после деплоя](https://github.com/Ferumit/agromarket-react/actions/runs/44668275410), 4/4.
+- Релиз: [v1.0.0](https://github.com/Ferumit/agromarket-react/releases/tag/v1.0.0).
+- Скриншоты: [CI зелёный](screenshots/lab12-ci-green.png), [smoke после деплоя](screenshots/lab12-smoke-after-deploy.png).
 - Демонстрация:
   - `npm run test:run`;
   - `npm run e2e` или `npx playwright test --ui`;
@@ -473,7 +485,7 @@ Accessibility: **93** → **100**. Единственное замечание �
 8. **`Date.now()` в e-mail** — каждый запуск регистрирует нового пользователя. С постоянным e-mail второй запуск
    получит 409 «Такая запись уже существует», и тест упадёт.
 9. **Полные E2E и smoke на продакшене** — см. ответ выше. Smoke запускают сразу после деплоя (у нас
-   автоматически по `deployment_status`) и по расписанию.
+   автоматически по статусу «Vercel» на коммите в `main`) и по расписанию.
 10. **429 в E2E.** Лимит ЛР11: 5 неудачных входов за 15 минут с одного IP. Тест «неверный пароль», запущенный
     в цикле, исчерпает его, и следующий вход получит 429. Решения:
     - перезапустить локальный API — счётчик в памяти;
