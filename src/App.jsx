@@ -113,7 +113,8 @@ function App() {
           </div>
 
           {loading && <p>Загрузка...</p>}
-          {error && <p className="error">{error}</p>}
+          {/* role="alert": экранный диктор сразу прочитает ошибку (нашёл тест ЛР12) */}
+          {error && <p className="error" role="alert">{error}</p>}
           {!loading && !error && products.length === 0 && <p>Товаров пока нет</p>}
           {!loading && !error && products.length > 0 && filteredProducts.length === 0 && (
             <p>По запросу «{searchTerm}» ничего не найдено</p>
