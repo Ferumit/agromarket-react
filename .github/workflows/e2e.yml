@@ -3,22 +3,24 @@ name: Smoke (production)
 # На продакшен идут только тесты @smoke: они ничего не создают в базе (ЛР12).
 # Полные E2E (регистрация, товары, заявки) — только локально: npm run e2e.
 # Когда запускается:
-#  - после каждого успешного деплоя Vercel в Production (событие deployment_status);
+#  - после каждого успешного деплоя Vercel из main: Vercel сообщает о деплое статусом коммита
+#    «Vercel» (событие status), а не через GitHub Deployments — поэтому не deployment_status;
 #  - ежедневно в 04:00 UTC (09:00 в Астане) — заметить, что «уснула» база или API;
 #  - кнопкой Run workflow
 on:
-  deployment_status:
+  status:
   workflow_dispatch:
   schedule:
     - cron: '0 4 * * *'
 
 jobs:
   smoke:
-    # Preview-деплои закрыты входом Vercel и не входят в CORS API — их не проверяем
+    # Только продакшен (коммит в main). Preview-деплои веток закрыты входом Vercel
+    # и не входят в CORS API — их не проверяем
     if: >-
-      github.event_name != 'deployment_status' ||
-      (github.event.deployment_status.state == 'success' &&
-       github.event.deployment.environment == 'Production')
+      github.event_name != 'status' ||
+      (github.event.context == 'Vercel' && github.event.state == 'success' &&
+       contains(github.event.branches.*.name, 'main'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

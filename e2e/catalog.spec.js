@@ -5,6 +5,8 @@ import { test, expect } from '@playwright/test';
 test('@smoke главная открывается, каталог показывает товары', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveTitle(/АгроМаркет/);
+  // Название магазина в шапке — его видит каждый посетитель (тренировка отката ЛР11 меняла его на «СЛОМАНО»)
+  await expect(page.getByRole('banner').getByRole('link').first()).toHaveText(/АгроМаркет/);
   await expect(page.getByRole('heading', { name: 'Каталог' })).toBeVisible();
   await expect(page.getByTestId('product-card').first()).toBeVisible({ timeout: 60_000 });
   await expect(page.getByRole('alert')).toHaveCount(0); // «Не удалось загрузить товары» нет
