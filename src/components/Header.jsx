@@ -1,7 +1,7 @@
 function Header({ cartCount = 0 }) {
   return (
     <header className="site-header">
-      <a href="#" className="logo">🌾 СЛОМАНО</a>
+      <a href="#" className="logo">🌾 АгроМаркет</a>
       <nav>
         <ul className="nav-links">
           <li><a href="#catalog">Каталог</a></li>
