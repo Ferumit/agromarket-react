@@ -27,7 +27,7 @@ describe('AddProductForm', () => {
     await waitFor(() => expect(onAdded).toHaveBeenCalledWith(
       expect.objectContaining({ id: 100, name: 'Мёд гречишный', price: 3500 })));
     expect(requests[0].headers.get('Authorization')).toBe(`Bearer ${TOKEN}`);
-    expect(requests[0].body).toEqual({ name: 'Мёд гречишный', category: 'Мёд', price: 3500, unit: 'кг' });
+    expect(requests[0].body).toEqual({ name: 'Мёд гречишный', category: 'Мёд', price: 3500, unit: 'кг', stock: 0 });
     expect(screen.getByLabelText('Название')).toHaveValue('');
   });
 

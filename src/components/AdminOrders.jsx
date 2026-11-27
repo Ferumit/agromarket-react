@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../api.js';
+import { money } from '../money.js';
 
 const STATUSES = {
   new: 'Новая',
@@ -55,8 +56,8 @@ export default function AdminOrders() {
               <tr>
                 <th>№</th>
                 <th>Клиент</th>
-                <th>Товар</th>
-                <th>Объём, кг</th>
+                <th>Состав</th>
+                <th>Сумма</th>
                 <th>Доставка</th>
                 <th>Статус</th>
               </tr>
@@ -66,9 +67,14 @@ export default function AdminOrders() {
                 <tr key={o.id}>
                   <td>{o.id}</td>
                   <td>{o.name}<br /><small>{o.email}</small></td>
-                  <td>{o.product_name || '—'}</td>
-                  <td>{o.quantity}</td>
-                  <td>{o.delivery_date || '—'}</td>
+                  {/* заказ из корзины (ЛР13): позиции и сумма; оптовая заявка: товар и объём */}
+                  <td>
+                    {o.items?.length
+                      ? o.items.map((i) => <div key={i.productId}>{i.name} × {i.quantity}</div>)
+                      : `${o.product_name || 'товар не указан'}, ${o.quantity} кг`}
+                  </td>
+                  <td>{o.total ? money(o.total) : '—'}</td>
+                  <td>{o.address || o.delivery_date || '—'}</td>
                   <td>
                     <select
                       value={o.status}

@@ -10,14 +10,15 @@ export const SESSION_EXPIRED = 'agromarket:session-expired';
 export class ApiError extends Error {
   constructor(data, status) {
     const details = Array.isArray(data?.details) ? data.details : [];
-    // Если есть details, текст ошибки собираем из них: «Ошибка валидации» сама по себе
-    // ничего не говорит (так её покажет, например, alert формы заявки)
-    super(details.length
-      ? details.map((d) => d.message).join('. ')
-      : data?.error || `Ошибка ${status}`);
+    // Если в details есть тексты, сообщение собираем из них: «Ошибка валидации» сама по себе
+    // ничего не говорит (так её покажет, например, alert формы заявки).
+    // У 409 «Недостаточно товара» (ЛР13) в details не тексты, а { name, available }
+    const messages = details.map((d) => d.message).filter(Boolean);
+    super(messages.length ? messages.join('. ') : data?.error || `Ошибка ${status}`);
     this.name = 'ApiError';
     this.status = status;
     this.details = details;
+    this.error = data?.error; // общий текст ответа сервера: «Ошибка валидации», «Недостаточно товара»
   }
 }
 
