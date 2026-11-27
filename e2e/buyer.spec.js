@@ -33,7 +33,7 @@ test('покупатель регистрируется, входит и офо�
   const card = page.getByTestId('product-card').first();
   const productName = (await card.getByRole('heading').textContent()).trim();
   await card.getByRole('button', { name: /в корзину/i }).click();
-  await expect(page.getByText(/корзина: 1/i)).toBeVisible();
+  await expect(page.getByRole('link', { name: /корзина \(1\)/i })).toBeVisible(); // счётчик — ссылка на /cart (ЛР13)
 
   // Заявка на этот товар
   const order = page.getByRole('form', { name: 'Оптовая заявка' });
