@@ -1,7 +1,8 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import App from './App';
+import { renderWithProviders } from './test/utils.jsx';
 import { server, recordRequests } from './test/server.js';
 import { farmer, PASSWORD, TOKEN } from './test/handlers.js';
 
@@ -9,7 +10,7 @@ import { farmer, PASSWORD, TOKEN } from './test/handlers.js';
 // API подменяет MSW (src/test/handlers.js): по умолчанию — три товара
 describe('Каталог (App)', () => {
   test('сначала показывает загрузку, потом товары', async () => {
-    render(<App />);
+    renderWithProviders(<App />);
 
     expect(screen.getByText(/загрузка/i)).toBeInTheDocument();
     // findBy ждёт, пока «придёт ответ сервера» и React перерисует экран
@@ -21,7 +22,7 @@ describe('Каталог (App)', () => {
 
   test('запрашивает правильный адрес, один раз', async () => {
     const requests = recordRequests();
-    render(<App />);
+    renderWithProviders(<App />);
     await screen.findByRole('heading', { name: 'Картофель' });
 
     expect(requests.map((r) => `${r.method} ${r.path}`)).toEqual(['GET /api/products']);
@@ -30,7 +31,7 @@ describe('Каталог (App)', () => {
   test('сервер упал (500) — сообщение об ошибке с role="alert", а не белый экран', async () => {
     server.use(http.get('*/api/products', () =>
       HttpResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 })));
-    render(<App />);
+    renderWithProviders(<App />);
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось загрузить товары');
     expect(screen.queryByText(/загрузка/i)).not.toBeInTheDocument();
@@ -39,21 +40,21 @@ describe('Каталог (App)', () => {
 
   test('сеть недоступна — тоже сообщение, а не пустая страница', async () => {
     server.use(http.get('*/api/products', () => HttpResponse.error())); // fetch бросит TypeError
-    render(<App />);
+    renderWithProviders(<App />);
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось загрузить товары');
   });
 
   test('сервер вернул [] — «Товаров пока нет»', async () => {
     server.use(http.get('*/api/products', () => HttpResponse.json([])));
-    render(<App />);
+    renderWithProviders(<App />);
 
     expect(await screen.findByText('Товаров пока нет')).toBeInTheDocument();
   });
 
   test('поиск оставляет подходящие товары, а если их нет — так и пишет', async () => {
     const ui = userEvent.setup();
-    render(<App />);
+    renderWithProviders(<App />);
     await screen.findByRole('heading', { name: 'Картофель' });
 
     const search = screen.getByRole('searchbox');
@@ -73,7 +74,7 @@ describe('Вход (App)', () => {
     localStorage.setItem('token', 'expired-token');
     localStorage.setItem('user', JSON.stringify(farmer));
     const requests = recordRequests();
-    render(<App />);
+    renderWithProviders(<App />);
 
     // Пока сервер не ответил, App верит localStorage
     expect(screen.getByText(/вы вошли как/i)).toBeInTheDocument();
@@ -89,7 +90,7 @@ describe('Вход (App)', () => {
 
   test('успешный вход сохраняет токен, «Выйти» возвращает форму', async () => {
     const ui = userEvent.setup();
-    render(<App />);
+    renderWithProviders(<App />);
 
     // «Email» на странице два (вход и заявка) — ищем внутри формы «Вход»
     const loginForm = screen.getByRole('form', { name: 'Вход' });

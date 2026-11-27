@@ -5,10 +5,11 @@ import { http, HttpResponse } from 'msw';
 // ошибки валидации — { error, details: [{ field, message }] } (ЛР11).
 // '*' в начале пути — подходит любой адрес API (localhost:3000, Render)
 
+// stock и farmer_id — с ЛР13 (миграция 013_orders.sql)
 export const products = [
-  { id: 1, name: 'Картофель', category: 'Овощи', price: 350, unit: 'кг', image: null },
-  { id: 2, name: 'Мёд натуральный', category: 'Мёд', price: 4500, unit: 'кг', image: null },
-  { id: 3, name: 'Молоко фермерское', category: 'Молочная продукция', price: 600, unit: 'л', image: null },
+  { id: 1, name: 'Картофель', category: 'Овощи', price: 350, unit: 'кг', image: null, stock: 20, farmer_id: null },
+  { id: 2, name: 'Мёд натуральный', category: 'Мёд', price: 4500, unit: 'кг', image: null, stock: 5, farmer_id: null },
+  { id: 3, name: 'Молоко фермерское', category: 'Молочная продукция', price: 600, unit: 'л', image: null, stock: 0, farmer_id: null },
 ];
 
 export const farmer = { id: 7, name: 'Фермер', email: 'farmer@agromarket.kz', role: 'user' };
@@ -51,5 +52,7 @@ export const handlers = [
     HttpResponse.json({ id: 100, image: null, ...(await request.json()) }, { status: 201 })),
 
   http.get('*/api/orders', () => HttpResponse.json([])),
+  http.get('*/api/orders/my', () => HttpResponse.json([])),
+  http.get('*/api/orders/incoming', () => HttpResponse.json([])),
   http.post('*/api/orders', () => HttpResponse.json({ id: 42, status: 'new' }, { status: 201 })),
 ];

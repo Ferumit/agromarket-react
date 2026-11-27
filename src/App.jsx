@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Route, Routes } from 'react-router';
 import ProductCard from './components/ProductCard';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -7,11 +8,13 @@ import LoginForm from './components/LoginForm.jsx';
 import AddProductForm from './components/AddProductForm.jsx';
 import AdminOrders from './components/AdminOrders.jsx';
 import { API_URL, SESSION_EXPIRED, apiFetch } from './api.js';
+import CartPage from './pages/CartPage.jsx';
+import MyOrdersPage from './pages/MyOrdersPage.jsx';
+import IncomingOrdersPage from './pages/IncomingOrdersPage.jsx';
 
 function App() {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   // Ленивая инициализация: localStorage читается один раз, при первом рендере
@@ -70,12 +73,6 @@ function App() {
     setUser(null);
   }
 
-  // Счётчик — общие данные приложения, поэтому состояние живёт в App,
-  // а карточки только сообщают о клике (lifting state up)
-  function handleAddToCart() {
-    setCartCount(cartCount + 1);
-  }
-
   // Бонус ЛР7: удаление товара администратором
   async function handleDeleteProduct(product) {
     if (!confirm(`Удалить товар «${product.name}»?`)) return;
@@ -87,18 +84,32 @@ function App() {
     }
   }
 
+  // ЛР13: остаток задают владелец товара или администратор
+  async function handleStockSave(product, stock) {
+    try {
+      const updated = await apiFetch(`/products/${product.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ stock }),
+      });
+      setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    } catch (err) {
+      alert('Ошибка: ' + err.message);
+    }
+  }
+
   const isAdmin = user?.role === 'admin';
+  const isFarmer = user?.role === 'farmer';
+  // Товар меняет администратор (любой) или фермер (только свой, ЛР13)
+  const canManage = (product) => isAdmin || (isFarmer && product.farmer_id === user.id);
 
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  return (
-    <>
-      <Header cartCount={cartCount} />
+  const home = (
       <main className="page">
         <section id="catalog" className="catalog">
-          {isAdmin && (
+          {(isAdmin || isFarmer) && (
             <AddProductForm onAdded={(p) => setProducts([...products, p])} />
           )}
 
@@ -124,10 +135,10 @@ function App() {
               <ProductCard
                 key={product.id}
                 product={product}
-                onAdd={handleAddToCart}
                 // id может прийти числом или строкой (json-server 1.x), поэтому через String
                 featured={String(product.id) === '1'}
-                onDelete={isAdmin ? handleDeleteProduct : undefined}
+                onDelete={canManage(product) ? handleDeleteProduct : undefined}
+                onStockSave={canManage(product) ? handleStockSave : undefined}
               />
             ))}
           </div>
@@ -162,6 +173,18 @@ function App() {
 
         {isAdmin && <AdminOrders />}
       </main>
+  );
+
+  // Маршруты (ЛР13). «*» — главная: прямая ссылка /admin или /login не даёт 404 (smoke ЛР12)
+  return (
+    <>
+      <Header user={user} />
+      <Routes>
+        <Route path="/cart" element={<CartPage user={user} />} />
+        <Route path="/orders" element={<MyOrdersPage user={user} />} />
+        <Route path="/farmer/orders" element={<IncomingOrdersPage user={user} />} />
+        <Route path="*" element={home} />
+      </Routes>
       <Footer />
     </>
   );

@@ -16,10 +16,10 @@ export default function AddProductForm({ onAdded }) {
     const data = Object.fromEntries(new FormData(form));
 
     try {
-      // Токен администратора apiFetch добавит сам; price отправляем числом
+      // Токен администратора или фермера apiFetch добавит сам; price и stock отправляем числами
       const product = await apiFetch('/products', {
         method: 'POST',
-        body: JSON.stringify({ ...data, price: Number(data.price) }),
+        body: JSON.stringify({ ...data, price: Number(data.price), stock: Number(data.stock || 0) }),
       });
       onAdded(product); // сообщаем App о новом товаре
       form.reset();
@@ -54,6 +54,11 @@ export default function AddProductForm({ onAdded }) {
         <input name="unit" placeholder="Единица (кг, л)" aria-label="Единица" defaultValue="кг"
           {...invalidProps(errors, 'unit', titleId)} />
         <FieldError errors={errors} field="unit" baseId={titleId} />
+      </div>
+      <div className="field">
+        <input name="stock" type="number" min="0" placeholder="Остаток" aria-label="Остаток" defaultValue="0"
+          {...invalidProps(errors, 'stock', titleId)} />
+        <FieldError errors={errors} field="stock" baseId={titleId} />
       </div>
       {error && <p className="error" role="alert">{error}</p>}
       <button type="submit">Добавить</button>

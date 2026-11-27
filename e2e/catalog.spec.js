@@ -34,3 +34,10 @@ test('@smoke прямая ссылка на внутренний адрес не
   expect(response.status()).toBe(200);
   await expect(page.getByRole('heading', { name: 'Каталог' })).toBeVisible();
 });
+
+test('@smoke корзина открывается', async ({ page }) => {
+  // ничего не меняет: пустая корзина живёт в localStorage браузера (ЛР13)
+  await page.goto('/cart');
+  await expect(page.getByRole('heading', { name: 'Корзина' })).toBeVisible();
+  await expect(page.getByText(/корзина пуста/i)).toBeVisible();
+});

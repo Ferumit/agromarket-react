@@ -402,3 +402,113 @@ img {
     top: 80px; /* ниже липкой шапки */
   }
 }
+
+/* ===== ЛР13: корзина и заказы ===== */
+a.cart {
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Страницы /cart, /orders, /farmer/orders — одна колонка без сетки главной */
+.page--single {
+  display: block;
+  max-width: 960px;
+}
+
+.card .stock {
+  font-weight: normal;
+  color: #4e5b4e;
+}
+
+.card .in-cart {
+  font-size: 0.9rem;
+  color: #2e7d32;
+}
+
+.card button:disabled {
+  background: #9e9e9e;
+  cursor: not-allowed;
+}
+
+.stock-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stock-form input {
+  width: 5rem;
+  padding: 6px;
+}
+
+.card .stock-form button {
+  margin-top: 0;
+  padding: 6px 10px;
+}
+
+.qty {
+  white-space: nowrap;
+}
+
+.qty button {
+  width: 2rem;
+  height: 2rem;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  color: #c62828;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.cart-total {
+  font-size: 1.2rem;
+}
+
+.checkout-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkout-form input {
+  flex: 1 1 260px;
+  padding: 10px;
+}
+
+.checkout-form button,
+.order button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #2e7d32;
+  color: #fff;
+  cursor: pointer;
+}
+
+.checkout-form button:disabled {
+  background: #9e9e9e;
+}
+
+.order {
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid #dfe6dc;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.order h2 {
+  margin-top: 0;
+}
+
+.success {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #e8f5e9;
+  color: #1b5e20;
+}
